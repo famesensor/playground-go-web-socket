@@ -2,9 +2,9 @@ package handler
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
 )
 
 type websocketHandler struct {
@@ -17,12 +17,17 @@ func NewWebsocketHandler(upgrader *websocket.Upgrader) *websocketHandler {
 	}
 }
 
-func (h *websocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *websocketHandler) RegisterRoutes(e *echo.Echo) {
+	e.GET("/ws", h.Handle)
+}
+
+// func (h *websocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *websocketHandler) Handle(c echo.Context) error {
 	// Upgrade the HTTP connection to a WebSocket connection
-	conn, err := h.upgrader.Upgrade(w, r, nil)
+	conn, err := h.upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		log.Println("Error upgrading:", err)
-		return
+		return err
 	}
 	defer conn.Close()
 
@@ -41,4 +46,6 @@ func (h *websocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+
+	return nil
 }
