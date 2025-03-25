@@ -42,7 +42,7 @@ func (hs *HTTPServer) RegisterRoute(handlers ...Handler) {
 	}
 }
 
-func (hs *HTTPServer) Run(...func()) {
+func (hs *HTTPServer) Run(cleanFuncs ...func()) {
 	// Start server
 	go func() {
 		if err := hs.e.Start(":" + hs.cfg.App.Port); err != nil && err != http.ErrServerClosed {
@@ -52,6 +52,10 @@ func (hs *HTTPServer) Run(...func()) {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	for _, cleanup := range cleanFuncs {
+		cleanup()
+	}
 
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
